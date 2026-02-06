@@ -746,5 +746,20 @@ module.exports = cds.service.impl(async function() {
             return req.reject(500, 'Confirmation failed: ' + error.message);
         }
     });
+
+    //Apply the auth to tokenUploadGenerate
+    this.on("oAuthCompanyToSupplier", async request => {
+        const { AuthTokens } = cds.entities;
+        const token = request.data.token;
+        const companyID = request.data.companyID;
+        if (!token || !companyID) {
+            return request.reject(400, 'Token and Company ID are required');
+        }
+        const authToken = await SELECT.one.from(AuthTokens).where({ token, company_ID: companyID });
+        if (!authToken) {
+            return request.reject(401, 'Invalid token or company ID');
+        }
+        request.reject(401, 'Unauthorized access');
+    });
     
 });

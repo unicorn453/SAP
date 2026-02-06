@@ -1,24 +1,24 @@
 using { com.sap.workshop.shipment as db } from '../db/schema';
 
 service ShipmentService {
-    
+
     // ===== NEW: Expose Workers and Partners (Read-only) =====
-    @readonly entity Workers as projection on db.Workers;
+    // @readonly entity Workers as projection on db.Workers;
     @readonly entity ExternalPartners as projection on db.ExternalPartners;
     
     // ===== Existing: Shipment Documents =====
-    entity ShipmentDocuments as projection on db.ShipmentDocuments;
+    // entity ShipmentDocuments as projection on db.ShipmentDocuments;
     
     // ===== NEW: Expose tokens and logs for debugging =====
     @readonly entity UploadTokens as projection on db.UploadTokens;
-    @readonly entity DownloadTokens as projection on db.DownloadTokens;
-    @readonly entity VerificationCodes as projection on db.VerificationCodes;
-    @readonly entity AuditLog as projection on db.AuditLog;
+    // @readonly entity DownloadTokens as projection on db.DownloadTokens;
+    // @readonly entity VerificationCodes as projection on db.VerificationCodes;
+    // @readonly entity AuditLog as projection on db.AuditLog;
     
     // ===== SUPPLIER ACTIONS (Anonymous) =====
     
     // Step 1: Supplier requests upload token
-    action generateUploadToken() returns {
+    action generateUploadToken(supplierID: String) returns {
         token: String;
         uploadUrl: String;
         expiresAt: DateTime;
@@ -62,6 +62,7 @@ service ShipmentService {
         receivedAt: DateTime;
         confirmationSent: Boolean;
     };
+    
     // ===== SCENARIO A ACTIONS (Enhanced 3-Layer Auth) =====
     
     action uploadDocumentScenarioA(
@@ -131,5 +132,16 @@ service ShipmentService {
     ) returns {
         success: Boolean;
         message: String;
+    };
+
+    // ===== NEW: OAuth from Company to Supplier =====
+    action oAuthCompanyToSupplier(
+        companyID: String,
+        supplierID: String
+    ) returns {
+        success: Boolean;
+        message: String;
+        authToken: String;
+        expiresAt: DateTime;
     };
 }

@@ -10,6 +10,17 @@
     }
   },
   "sap.ui": {
+     "models": {
+      "": {
+        "dataSource": "shipmentService",
+        "type": "sap.ui.model.odata.v4.ODataModel",
+        "settings": {
+          "synchronizationMode": "None",
+          "operationMode": "Server",
+          "autoExpandSelect": true
+        }
+      }
+    },
     "technology": "UI5",
     "deviceTypes": {
       "desktop": true,
@@ -29,5 +40,29 @@
       "compact": true,
       "cozy": true
     }
-  }
+  },
+  "dataSources": {
+      "shipmentService": {
+        "uri": "../../../../srv/shipment-service",
+        "type": "OData",
+        "settings": {
+          "defaultBindingMode": "TwoWay"
+        }
+      }
+    },
+    "routing": {
+      "routes": [
+        {
+          "pattern": "",
+          "name": "Main",
+          "target": "Main"
+        }
+      ],
+      "targets": {
+        "Main": {
+          "viewName": "Main",
+          "viewLevel": 1
+        }
+      }
+    }
 }
