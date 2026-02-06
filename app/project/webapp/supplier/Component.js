@@ -51,6 +51,14 @@ function newFunction() {
         // Generate Token Button
         var oGenBtn = this._createButton("🔑 Generate Upload Token", async () => {
           oGenBtn.setEnabled(false);
+          var supplierID = oSupplierInput.getValue();
+          
+          if (!supplierID) {
+            MessageToast.show("❌ Please enter your Supplier ID first");
+            oGenBtn.setEnabled(true);
+            return;
+          }
+          
           try {
             var resp = await this._fetchToken(baseUrl, supplierID);
             var data = await resp.json();
@@ -67,7 +75,11 @@ function newFunction() {
         var oUploadBtn = this._createButton("📤 Upload Document", async () => {
           oUploadBtn.setEnabled(false);
           try {
-            await this._validateUploadInputs();
+            if (!that._selectedFile) throw new Error("Please select a file");
+            if (!oSupplierInput.getValue()) throw new Error("Please enter Supplier ID");
+            if (!oRecipientInput.getValue()) throw new Error("Please enter Recipient Email");
+            if (!oTokenInput.getValue()) throw new Error("Please generate a token first");
+            
             var fileBase64 = await this._readFileAsBase64(that._selectedFile);
             await this._uploadDocument(baseUrl, oTokenInput, oSupplierInput, oRecipientInput, fileBase64);
             this._resetInputs(oTokenInput, oSupplierInput, oRecipientInput, oFileUploader);
@@ -141,15 +153,17 @@ function newFunction() {
       },
 
       _fetchToken: async function (baseUrl, supplierID) {
-        const resp = await fetch(baseUrl + "/generate-token", {
+        const resp = await fetch(baseUrl + "/odata/v4/shipment/generateUploadToken", {
           method: "POST",
           headers: {
-            "Content-Type": "application/json",
-            "Authorization": "Bearer " + token
+            "Content-Type": "application/json"
           },
           body: JSON.stringify({ supplierID: supplierID })
         });
-        if (!resp.ok) throw new Error("Failed to generate token");
+        if (!resp.ok) {
+          const error = await resp.text();
+          throw new Error(error || "Failed to generate token");
+        }
         return resp;
       },
 
@@ -175,8 +189,8 @@ function newFunction() {
           documentContent: fileBase64
         };
 
-        MessageToast.show("Uploading document...");
-        const resp = await fetch(baseUrl + '/uploadDocument', {
+        MessageToast.show("📤 Uploading document...");
+        const resp = await fetch(baseUrl + '/odata/v4/shipment/uploadDocument', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(payload)
@@ -186,6 +200,7 @@ function newFunction() {
           throw new Error(txt || "Upload failed");
         }
 
+        var result = await resp.json();
         MessageToast.show("✅ Document uploaded and email sent!");
         oSuccessText.setText("Download token has been sent to: " + oRecipientInput.getValue());
         oSuccessText.setVisible(true);

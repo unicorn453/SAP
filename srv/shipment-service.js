@@ -8,14 +8,175 @@ const { storeDocument, retrieveDocument } = require('./file-storage');
 
 module.exports = cds.service.impl(async function() {
     
-    const { ShipmentDocuments, Workers, DownloadTokens, VerificationCodes } = this.entities;
+    const { ShipmentDocuments, Workers, DownloadTokens, VerificationCodes, UploadTokens } = this.entities;
     
     // ============================================
-    // SCENARIO A: EXTERNAL → INTERNAL
-    // Step 1: Supplier uploads document
+    // STEP 1: Generate Upload Token (Supplier)
     // ============================================
     
-    this.on('uploadDocumentScenarioA', async (req) => {
+    this.on('generateUploadToken', async (req) => {
+        const { supplierID } = req.data;
+        
+        if (!supplierID) {
+            return req.reject(400, 'Supplier ID is required');
+        }
+        
+        const db = await cds.connect.to('db');
+        
+        try {
+            // Generate unique token
+            const uploadToken = crypto.randomBytes(32).toString('hex');
+            const expiresAt = new Date(Date.now() + 5 * 60 * 1000); // 5 minutes
+            
+            // Store token in database
+            await db.run(INSERT.into('com.sap.workshop.shipment.UploadTokens').entries({
+                ID: cds.utils.uuid(),
+                token: uploadToken,
+                supplierID: supplierID,
+                createdAt: new Date().toISOString(),
+                expiresAt: expiresAt.toISOString(),
+                isUsed: false
+            }));
+            
+            return {
+                success: true,
+                token: uploadToken,
+                uploadUrl: `/odata/v4/shipment/uploadDocument`,
+                expiresAt: expiresAt,
+                message: 'Token generated. Valid for 5 minutes.'
+            };
+            
+        } catch (error) {
+            console.error('❌ Token generation failed:', error);
+            return req.reject(500, 'Failed to generate token: ' + error.message);
+        }
+    });
+    
+    // ============================================
+    // STEP 2: Upload Document (Supplier)
+    // ============================================
+    
+    this.on('uploadDocument', async (req) => {
+        const {
+            token,
+            supplierID,
+            recipientEmail,
+            documentName,
+            documentContent
+        } = req.data;
+        
+        const db = await cds.connect.to('db');
+        
+        try {
+            // 1. Validate token
+            const uploadToken = await db.run(
+                SELECT.one.from('com.sap.workshop.shipment.UploadTokens')
+                    .where({ token: token, supplierID: supplierID })
+            );
+            
+            if (!uploadToken) {
+                return req.reject(401, 'Invalid or expired token');
+            }
+            
+            if (new Date(uploadToken.expiresAt) < new Date()) {
+                return req.reject(403, 'Token has expired');
+            }
+            
+            if (uploadToken.isUsed) {
+                return req.reject(403, 'Token has already been used');
+            }
+            
+            // 2. Validate recipient email
+            if (!recipientEmail || !recipientEmail.includes('@')) {
+                return req.reject(400, 'Valid recipient email is required');
+            }
+            
+            // 3. Validate file
+            const buffer = Buffer.from(documentContent, 'base64');
+            if (buffer.length > config.MAX_FILE_SIZE) {
+                return req.reject(400, `File size exceeds maximum of ${config.MAX_FILE_SIZE / 1024 / 1024}MB`);
+            }
+            
+            // 4. Create shipment
+            const shipmentID = cds.utils.uuid();
+            const storagePath = await storeDocument(shipmentID, documentName, buffer);
+            const mimeType = config.getMimeType(documentName);
+            const downloadToken = crypto.randomBytes(32).toString('hex');
+            const expiresAt = new Date(Date.now() + config.DOWNLOAD_LINK_EXPIRY_TOTAL);
+            
+            // Insert shipment document
+            await db.run(INSERT.into('com.sap.workshop.shipment.ShipmentDocuments').entries({
+                ID: shipmentID,
+                senderName: supplierID,
+                senderEmail: supplierID + '@supplier.com',
+                senderType: 'EXTERNAL',
+                recipientEmail: recipientEmail,
+                recipientType: 'INTERNAL',
+                documentName: documentName,
+                documentSize: buffer.length,
+                mimeType: mimeType,
+                storagePath: storagePath,
+                status: 'PENDING',
+                uploadedAt: new Date().toISOString(),
+                expiresAt: expiresAt.toISOString(),
+                linkClickCount: 0,
+                downloadAttempts: 0,
+                isLocked: false,
+                receiptConfirmed: false,
+                createdAt: new Date().toISOString(),
+                modifiedAt: new Date().toISOString()
+            }));
+            
+            // Create download token
+            await db.run(INSERT.into('com.sap.workshop.shipment.DownloadTokens').entries({
+                token: downloadToken,
+                shipment_ID: shipmentID,
+                createdAt: new Date().toISOString(),
+                expiresAt: expiresAt.toISOString(),
+                downloadCount: 0,
+                maxDownloads: config.MAX_DOWNLOAD_ATTEMPTS,
+                ipAddress: 'PORTAL',
+                emailSent: false,
+                sentTo: recipientEmail,
+                linkClickCount: 0,
+                maxClicks: config.MAX_LINK_CLICKS
+            }));
+            
+            // Send email
+            const accessLink = `${config.RECEIVER_URL}?token=${downloadToken}`;
+            const emailSent = await emailService.sendFileAccessEmail({
+                requestNumber: shipmentID,
+                recipientEmail: recipientEmail,
+                recipientName: recipientEmail.split('@')[0],
+                senderName: supplierID,
+                senderEmail: supplierID + '@supplier.com',
+                fileName: documentName,
+                fileSize: buffer.length,
+                accessLink: accessLink,
+                expiresAt: expiresAt
+            });
+            
+            // Mark token as used
+            await db.run(
+                UPDATE('com.sap.workshop.shipment.UploadTokens')
+                    .set({ isUsed: true })
+                    .where({ token: token })
+            );
+            
+            return {
+                success: true,
+                message: 'Document uploaded successfully',
+                downloadToken: downloadToken,
+                shipmentID: shipmentID,
+                emailSent: emailSent
+            };
+            
+        } catch (error) {
+            console.error('❌ Upload failed:', error);
+            return req.reject(500, 'Upload failed: ' + error.message);
+        }
+    });
+    
         const { 
             senderName, 
             senderEmail, 
@@ -762,4 +923,3 @@ module.exports = cds.service.impl(async function() {
         request.reject(401, 'Unauthorized access');
     });
     
-});
