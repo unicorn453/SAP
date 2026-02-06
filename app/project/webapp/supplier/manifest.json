@@ -1,0 +1,33 @@
+{
+  "_version": "1.49.0",
+  "sap.app": {
+    "id": "supplier",
+    "type": "application",
+    "title": "Supplier Portal",
+    "description": "Supplier portal to upload and send shipment documents",
+    "applicationVersion": {
+      "version": "1.0.0"
+    }
+  },
+  "sap.ui": {
+    "technology": "UI5",
+    "deviceTypes": {
+      "desktop": true,
+      "tablet": true,
+      "phone": true
+    }
+  },
+  "sap.ui5": {
+    "dependencies": {
+      "minUI5Version": "1.108.0",
+      "libs": {
+        "sap.m": {},
+        "sap.ui.core": {}
+      }
+    },
+    "contentDensities": {
+      "compact": true,
+      "cozy": true
+    }
+  }
+}

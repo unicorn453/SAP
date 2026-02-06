@@ -1,65 +1,72 @@
 {
-	"name": "send_and_request",
-	"version": "1.0.0",
-	"description": "A simple CAP project.",
-	"dependencies": {
-		"@cap-js/audit-logging": ">=0",
-		"@cap-js/hana": "^2",
-		"@cap-js/notifications": "*",
-		"@cap-js/postgres": "^2",
-		"@sap/cds": "^9",
-		"@sap/cds-mtxs": "^3",
-		"@sap/xssec": "^4",
-		"docker": "^1.0.0",
-		"dotenv": "^17.2.3",
-		"express": "^4",
-		"kafkajs": "^2",
-		"nodemailer": "^8.0.0",
-		"redis": "^5.0.0"
-	},
-	"devDependencies": {
-		"@cap-js/sqlite": "^2",
-		"@sap/cds-dk": "^9",
-		"@sap/dev-cap-tools": "^1.31.0"
-	},
-	"scripts": {
-		"start": "cds-serve"
-	},
-	"private": true,
-	"cds": {
-		"requires": {
-			"db-ext": {
-				"[development]": {
-					"model": "db/sqlite"
-				},
-				"[production]": {
-					"model": "db/hana"
-				}
-			},
-			"[production]": {
-				"auth": "xsuaa",
-				"multitenancy": true
-			},
-			"[with-mtx]": {
-				"multitenancy": true
-			},
-			"messaging": {
-				"kind": "enterprise-messaging"
-			},
-			"connectivity": true,
-			"destinations": true,
-			"html5-repo": true,
-			"portal": true,
-			"application-logging": true,
-			"ShipmentService": {
-				"impl": "srv/shipment-service-enhanced.js"
-			}
-		},
-		"profile": "with-mtx-sidecar",
-		"protocols": {
-			"rest": {
-				"limit": "100mb"
-			}
-		}
-	}
+  "name": "send_and_request",
+  "version": "1.0.0",
+  "description": "A simple CAP project.",
+  "dependencies": {
+    "@cap-js/audit-logging": ">=0",
+    "@cap-js/hana": "^2",
+    "@cap-js/notifications": "*",
+    "@cap-js/postgres": "^2",
+    "@sap/cds": "^9",
+    "@sap/cds-mtxs": "^3",
+    "@sap/xssec": "^4",
+    "docker": "^0.2.14",
+    "dotenv": "^17.2.3",
+    "express": "^4",
+    "kafkajs": "^2",
+    "nodemailer": "^8.0.0",
+    "redis": "^5.0.0"
+  },
+  "devDependencies": {
+    "@cap-js/sqlite": "^2",
+    "@sap/cds-dk": "^9",
+    "@sap/dev-cap-tools": "^1.31.0",
+    "cds-plugin-ui5": "^0.13.0",
+    "rimraf": "^5.0.5",
+    "mbt": "^1.2.29"
+  },
+  "scripts": {
+    "start": "cds-serve",
+    "watch-project": "cds watch --open project/index.html?sap-ui-xx-viewCache=false --livereload false",
+    "undeploy": "cf undeploy send_and_request --delete-services --delete-service-keys --delete-service-brokers",
+    "build": "rimraf resources mta_archives && mbt build --mtar archive",
+    "deploy": "cf deploy mta_archives/archive.mtar --retries 1"
+  },
+  "private": true,
+  "cds": {
+    "requires": {
+      "db-ext": {
+        "[development]": {
+          "model": "db/sqlite"
+        },
+        "[production]": {
+          "model": "db/hana"
+        }
+      },
+      "[production]": {
+        "auth": "xsuaa",
+        "multitenancy": true
+      },
+      "[with-mtx]": {
+        "multitenancy": true
+      },
+      "messaging": {
+        "kind": "enterprise-messaging"
+      },
+      "connectivity": true,
+      "destinations": true,
+      "html5-repo": true,
+      "portal": true,
+      "application-logging": true
+    },
+    "profile": "with-mtx-sidecar",
+    "protocols": {
+      "rest": {
+        "limit": "100mb"
+      }
+    }
+  },
+  "workspaces": [
+    "app/*"
+  ]
 }

@@ -1,0 +1,1 @@
+using ShipmentService as service from '../../srv/shipment-service';

@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Supplier Portal</title>
+    <script
+        id="sap-ui-bootstrap"
+        src="https://sapui5.hana.ondemand.com/1.120.0/resources/sap-ui-core.js"
+        data-sap-ui-theme="sap_horizon"
+        data-sap-ui-resourceroots='{
+            "supplier": "./"
+        }'
+        data-sap-ui-oninit="module:sap/ui/core/ComponentSupport"
+        data-sap-ui-compatVersion="edge"
+        data-sap-ui-async="true"
+        data-sap-ui-frameOptions="trusted"
+    ></script>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+        }
+        .back-link {
+            padding: 10px 20px;
+            background: #f5f5f5;
+            border-bottom: 1px solid #ccc;
+            text-align: left;
+        }
+        .back-link a {
+            color: #0070f2;
+            text-decoration: none;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        .back-link a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body class="sapUiBody sapUiSizeCompact" id="content">
+    <div class="back-link">
+        <a onclick="window.location.href='../'">← Back to Home</a>
+    </div>
+    <div
+        data-sap-ui-component
+        data-name="supplier"
+        data-id="supplierContainer"
+        data-settings='{"id" : "supplier"}'
+        data-handle-validation="true"
+    ></div>
+</body>
+</html>

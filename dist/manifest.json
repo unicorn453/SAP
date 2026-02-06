@@ -1,0 +1,104 @@
+{
+	"_version": "1.49.0",
+	"sap.app": {
+		"id": "shipment.management",
+		"type": "application",
+		"title": "Shipment Management",
+		"description": "Manage supplier shipments and inventory documents",
+		"applicationVersion": {
+			"version": "1.0.0"
+		},
+		"dataSources": {
+			"mainService": {
+				"uri": "/odata/v4/shipment/",
+				"type": "OData",
+				"settings": {
+					"odataVersion": "4.0"
+				}
+			}
+		}
+	},
+	"sap.ui": {
+		"technology": "UI5",
+		"deviceTypes": {
+			"desktop": true,
+			"tablet": true,
+			"phone": true
+		}
+	},
+	"sap.ui5": {
+		"dependencies": {
+			"minUI5Version": "1.108.0",
+			"libs": {
+				"sap.fe.templates": {}
+			}
+		},
+		"contentDensities": {
+			"compact": true,
+			"cozy": true
+		},
+		"models": {
+			"i18n": {
+				"type": "sap.ui.model.resource.ResourceModel",
+				"settings": {
+					"bundleName": "shipment.management.i18n.i18n"
+				}
+			},
+			"": {
+				"dataSource": "mainService",
+				"preload": true,
+				"settings": {
+					"synchronizationMode": "None",
+					"operationMode": "Server",
+					"autoExpandSelect": true,
+					"earlyRequests": true
+				}
+			}
+		},
+		"routing": {
+			"routes": [
+				{
+					"pattern": ":?query:",
+					"name": "ShipmentDocumentsList",
+					"target": "ShipmentDocumentsList"
+				},
+				{
+					"pattern": "ShipmentDocuments({key}):?query:",
+					"name": "ShipmentDocumentsObjectPage",
+					"target": "ShipmentDocumentsObjectPage"
+				}
+			],
+			"targets": {
+				"ShipmentDocumentsList": {
+					"type": "Component",
+					"id": "ShipmentDocumentsList",
+					"name": "sap.fe.templates.ListReport",
+					"options": {
+						"settings": {
+							"entitySet": "ShipmentDocuments",
+							"variantManagement": "Page",
+							"navigation": {
+								"ShipmentDocuments": {
+									"detail": {
+										"route": "ShipmentDocumentsObjectPage"
+									}
+								}
+							}
+						}
+					}
+				},
+				"ShipmentDocumentsObjectPage": {
+					"type": "Component",
+					"id": "ShipmentDocumentsObjectPage",
+					"name": "sap.fe.templates.ObjectPage",
+					"options": {
+						"settings": {
+							"entitySet": "ShipmentDocuments"
+						}
+					}
+				}
+			}
+		},
+		"flexBundle": false
+	}
+}

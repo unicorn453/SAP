@@ -1,348 +1,351 @@
 _schema-version: 3.3.0
 ID: send_and_request
+description: A simple CAP project.
 version: 1.0.0
-description: "A simple CAP project."
+modules:
+- name: send_and_request-srv
+  type: nodejs
+  path: gen/srv
+  requires:
+  - name: send_and_request-auth
+  - name: send_and_request-db
+  - name: send_and_request-postgres
+  - name: send_and_request-redis
+  - name: send_and_request-messaging
+  - name: send_and_request-kafka
+  - name: send_and_request-connectivity
+  - name: send_and_request-destination
+  - name: send_and_request-logging
+  - name: send_and_request-auditlog
+  provides:
+  - name: srv-api
+    properties:
+      srv-url: ${default-url}
+  parameters:
+    buildpack: nodejs_buildpack
+    instances: 1
+  build-parameters:
+    builder: npm-ci
+- name: send_and_request-mtx
+  type: nodejs
+  path: gen/mtx/sidecar
+  requires:
+  - name: send_and_request-auth
+  - name: send_and_request-db
+  - name: send_and_request-registry
+  - name: app-api
+    properties:
+      SUBSCRIPTION_URL: ~{app-protocol}://\${tenant_subdomain}-~{app-uri}
+  - name: send_and_request-destination
+  - name: send_and_request-html5-runtime
+  - name: send_and_request-html5-repo-host
+  - name: send_and_request-portal
+  - name: send_and_request-logging
+  provides:
+  - name: mtx-api
+    properties:
+      mtx-url: ${default-url}
+  parameters:
+    disk-quota: 512M
+    instances: 1
+    memory: 256M
+  build-parameters:
+    builder: npm-ci
+  hooks:
+  - name: upgrade-all
+    type: task
+    phases:
+    - blue-green.application.before-start.idle
+    - deploy.application.before-start
+    parameters:
+      command: cds-mtx upgrade '*'
+      disk-quota: 768M
+      memory: 512M
+      name: upgrade
+- name: send_and_request-postgres-deployer
+  type: nodejs
+  path: gen/pg
+  requires:
+  - name: send_and_request-postgres
+  parameters:
+    buildpack: nodejs_buildpack
+    no-route: true
+    no-start: true
+    tasks:
+    - command: npm start
+      name: deploy-to-postgresql
+- name: send_and_request
+  type: approuter.nodejs
+  path: app/router
+  properties:
+    TENANT_HOST_PATTERN: ^(.*)-${default-uri}
+  requires:
+  - name: srv-api
+    group: destinations
+    properties:
+      forwardAuthToken: true
+      name: srv-api
+      url: ~{srv-url}
+  - name: mtx-api
+    group: destinations
+    properties:
+      name: mtx-api
+      url: ~{mtx-url}
+  - name: send_and_request-auth
+  - name: send_and_request-destination
+  - name: send_and_request-html5-runtime
+  - name: send_and_request-portal
+  - name: send_and_request-logging
+  provides:
+  - name: app-api
+    properties:
+      app-protocol: ${protocol}
+      app-uri: ${default-uri}
+  parameters:
+    disk-quota: 256M
+    keep-existing-routes: true
+    memory: 256M
+- name: send_and_request-app-deployer
+  type: com.sap.application.content
+  path: gen
+  requires:
+  - name: send_and_request-auth
+  - name: srv-api
+  - name: send_and_request-html5-repo-host
+    parameters:
+      config:
+        HTML5Runtime_enabled: true
+      content-target: true
+  build-parameters:
+    build-result: app/
+    requires:
+    - artifacts:
+      - admin-authors.zip
+      name: send_and_requestadminauthors
+      target-path: app/
+    - artifacts:
+      - admin-books.zip
+      name: send_and_requestadminbooks
+      target-path: app/
+    - artifacts:
+      - browse.zip
+      name: send_and_requestbrowse
+      target-path: app/
+    - artifacts:
+      - genres.zip
+      name: send_and_requestgenres
+      target-path: app/
+    - artifacts:
+      - shipment-management.zip
+      name: shipment-management
+      target-path: app/
+- name: send_and_requestadminauthors
+  type: html5
+  path: app/admin-authors
+  build-parameters:
+    build-result: dist
+    builder: custom
+    commands:
+    - npm ci
+    - npm run build
+    supported-platforms: []
+- name: send_and_requestadminbooks
+  type: html5
+  path: app/admin-books
+  build-parameters:
+    build-result: dist
+    builder: custom
+    commands:
+    - npm ci
+    - npm run build
+    supported-platforms: []
+- name: send_and_requestbrowse
+  type: html5
+  path: app/browse
+  build-parameters:
+    build-result: dist
+    builder: custom
+    commands:
+    - npm ci
+    - npm run build
+    supported-platforms: []
+- name: send_and_requestgenres
+  type: html5
+  path: app/genres
+  build-parameters:
+    build-result: dist
+    builder: custom
+    commands:
+    - npm ci
+    - npm run build
+    supported-platforms: []
+- name: send_and_request-portal-deployer
+  type: com.sap.application.content
+  path: app/portal
+  requires:
+  - name: send_and_request-portal
+    parameters:
+      content-target: true
+      service-key:
+        config:
+          content-endpoint: developer
+        name: send_and_request-portal-key
+  - name: send_and_request-auth
+  - name: send_and_request-html5-repo-host
+  - name: send_and_request-app-deployer
+  parameters:
+    config:
+      TENANT_HOST_PATTERN: ^(.*)-${default-uri}
+  deployed-after:
+  - send_and_request-app-deployer
+- name: notification-content-deployment
+  type: nodejs
+  path: gen/srv
+  requires:
+  - name: send_and_request-destination
+  parameters:
+    disk-quota: 1GB
+    memory: 256MB
+    no-route: true
+    no-start: true
+    tasks:
+    - command: node node_modules/@cap-js/notifications/lib/content-deployment.js
+      disk-quota: 1GB
+      memory: 256MB
+      name: notification-content-deployment
+- name: shipment-management
+  type: html5
+  path: app/project
+  build-parameters:
+    build-result: dist
+    builder: custom
+    commands:
+    - npm install
+    - npm run build:cf
+    supported-platforms: []
+resources:
+- name: send_and_request-auth
+  type: org.cloudfoundry.managed-service
+  parameters:
+    config:
+      oauth2-configuration:
+        credential-types:
+        - binding-secret
+        - x509
+        redirect-uris:
+        - https://*~{app-api/app-uri}/**
+      role-collections:
+      - description: generated
+        name: admin (send_and_request ${org}-${space})
+        role-template-references:
+        - $XSAPPNAME.admin
+      tenant-mode: shared
+      xsappname: send_and_request-${org}-${space}
+    path: ./xs-security.json
+    service: xsuaa
+    service-plan: application
+  processed-after:
+  - send_and_request-messaging
+  requires:
+  - name: app-api
+- name: send_and_request-db
+  type: org.cloudfoundry.managed-service
+  parameters:
+    service: service-manager
+    service-plan: container
+- name: send_and_request-postgres
+  type: org.cloudfoundry.managed-service
+  parameters:
+    service: postgresql-db
+    service-plan: development
+- name: send_and_request-redis
+  type: org.cloudfoundry.managed-service
+  parameters:
+    service: redis-cache
+    service-plan: standard
+- name: send_and_request-registry
+  type: org.cloudfoundry.managed-service
+  parameters:
+    config:
+      appName: send_and_request-${org}-${space}
+      appUrls:
+        callbackTimeoutMillis: 300000
+        getDependencies: ~{mtx-api/mtx-url}/-/cds/saas-provisioning/dependencies
+        onSubscription: ~{mtx-api/mtx-url}/-/cds/saas-provisioning/tenant/{tenantId}
+        onSubscriptionAsync: true
+        onUnSubscriptionAsync: true
+        onUpdateDependenciesAsync: true
+      category: Category
+      description: A simple CAP project.
+      displayName: send_and_request
+      xsappname: send_and_request-${org}-${space}
+    service: saas-registry
+    service-plan: application
+  requires:
+  - name: mtx-api
+- name: send_and_request-messaging
+  type: org.cloudfoundry.managed-service
+  parameters:
+    path: ./event-mesh.json
+    service: enterprise-messaging
+    service-plan: default
+- name: send_and_request-kafka
+  type: org.cloudfoundry.managed-service
+  parameters:
+    service: kafka
+    service-plan: standard
+- name: send_and_request-connectivity
+  type: org.cloudfoundry.managed-service
+  parameters:
+    service: connectivity
+    service-plan: lite
+- name: send_and_request-destination
+  type: org.cloudfoundry.managed-service
+  parameters:
+    config:
+      HTML5Runtime_enabled: false
+      init_data:
+        instance:
+          destinations:
+          - Authentication: NoAuthentication
+            Name: ui5
+            ProxyType: Internet
+            Type: HTTP
+            URL: https://ui5.sap.com
+          existing_destinations_policy: update
+    service: destination
+    service-plan: lite
+- name: send_and_request-html5-repo-host
+  type: org.cloudfoundry.managed-service
+  parameters:
+    service: html5-apps-repo
+    service-plan: app-host
+- name: send_and_request-html5-runtime
+  type: org.cloudfoundry.managed-service
+  parameters:
+    service: html5-apps-repo
+    service-plan: app-runtime
+- name: send_and_request-portal
+  type: org.cloudfoundry.managed-service
+  parameters:
+    service: portal
+    service-plan: standard
+- name: send_and_request-logging
+  type: org.cloudfoundry.managed-service
+  parameters:
+    service: application-logs
+    service-plan: standard
+- name: send_and_request-auditlog
+  type: org.cloudfoundry.managed-service
+  parameters:
+    service: auditlog
+    service-plan: premium
 parameters:
-  enable-parallel-deployments: true
   deploy_mode: html5-repo
+  enable-parallel-deployments: true
 build-parameters:
   before-all:
-    - builder: custom
-      commands:
-        - npm ci
-        - npx cds build --production
-modules:
-  - name: send_and_request-srv
-    type: nodejs
-    path: gen/srv
-    parameters:
-      instances: 1
-      buildpack: nodejs_buildpack
-    build-parameters:
-      builder: npm-ci
-    provides:
-      - name: srv-api # required by consumers of CAP services (e.g. approuter)
-        properties:
-          srv-url: ${default-url}
-    requires:
-      - name: send_and_request-auth
-      - name: send_and_request-db
-      - name: send_and_request-postgres
-      - name: send_and_request-redis
-      - name: send_and_request-messaging
-      - name: send_and_request-kafka
-      - name: send_and_request-connectivity
-      - name: send_and_request-destination
-      - name: send_and_request-logging
-      - name: send_and_request-auditlog
-
-  - name: send_and_request-mtx
-    type: nodejs
-    path: gen/mtx/sidecar
-    requires:
-      - name: send_and_request-auth
-      - name: send_and_request-db
-      - name: send_and_request-registry
-      - name: app-api
-        properties:
-          SUBSCRIPTION_URL: ~{app-protocol}://\${tenant_subdomain}-~{app-uri}
-      - name: send_and_request-destination
-      - name: send_and_request-html5-runtime
-      - name: send_and_request-html5-repo-host
-      - name: send_and_request-portal
-      - name: send_and_request-logging
-    build-parameters:
-      builder: npm-ci
-    parameters:
-      instances: 1
-      memory: 256M
-      disk-quota: 512M
-    hooks:
-      - name: upgrade-all
-        type: task
-        phases:
-          - blue-green.application.before-start.idle
-          - deploy.application.before-start
-        parameters:
-          name: upgrade
-          memory: 512M # increase as required
-          disk-quota: 768M # increase as required
-          command: cds-mtx upgrade '*'
-    provides:
-      - name: mtx-api
-        properties:
-          mtx-url: ${default-url}
-
-  - name: send_and_request-postgres-deployer
-    type: nodejs
-    path: gen/pg
-    parameters:
-      buildpack: nodejs_buildpack
-      no-route: true
-      no-start: true
-      tasks:
-        - name: deploy-to-postgresql
-          command: npm start
-    requires:
-      - name: send_and_request-postgres
-  - name: send_and_request
-    type: approuter.nodejs
-    path: app/router
-    parameters:
-      keep-existing-routes: true
-      disk-quota: 256M
-      memory: 256M
-    properties:
-      TENANT_HOST_PATTERN: "^(.*)-${default-uri}"
-    requires:
-      - name: srv-api
-        group: destinations
-        properties:
-          name: srv-api # must be used in xs-app.json as well
-          url: ~{srv-url}
-          forwardAuthToken: true
-      - name: mtx-api
-        group: destinations
-        properties:
-          name: mtx-api # must be used in xs-app.json as well
-          url: ~{mtx-url}
-      - name: send_and_request-auth
-      - name: send_and_request-destination
-      - name: send_and_request-html5-runtime
-      - name: send_and_request-portal
-      - name: send_and_request-logging
-    provides:
-      - name: app-api
-        properties:
-          app-protocol: ${protocol}
-          app-uri: ${default-uri}
-
-  - name: send_and_request-app-deployer
-    type: com.sap.application.content
-    path: gen
-    requires:
-      - name: send_and_request-auth
-      - name: srv-api
-      - name: send_and_request-html5-repo-host
-        parameters:
-          content-target: true
-          config:
-            HTML5Runtime_enabled: true
-    build-parameters:
-      build-result: app/
-      requires:
-        - name: send_and_requestadminauthors
-          artifacts:
-            - admin-authors.zip
-          target-path: app/
-        - name: send_and_requestadminbooks
-          artifacts:
-            - admin-books.zip
-          target-path: app/
-        - name: send_and_requestbrowse
-          artifacts:
-            - browse.zip
-          target-path: app/
-        - name: send_and_requestgenres
-          artifacts:
-            - genres.zip
-          target-path: app/
-
-  - name: send_and_requestadminauthors
-    type: html5
-    path: app/admin-authors
-    build-parameters:
-      build-result: dist
-      builder: custom
-      commands:
-        - npm ci
-        - npm run build
-      supported-platforms:
-        []
-  - name: send_and_requestadminbooks
-    type: html5
-    path: app/admin-books
-    build-parameters:
-      build-result: dist
-      builder: custom
-      commands:
-        - npm ci
-        - npm run build
-      supported-platforms:
-        []
-  - name: send_and_requestbrowse
-    type: html5
-    path: app/browse
-    build-parameters:
-      build-result: dist
-      builder: custom
-      commands:
-        - npm ci
-        - npm run build
-      supported-platforms:
-        []
-  - name: send_and_requestgenres
-    type: html5
-    path: app/genres
-    build-parameters:
-      build-result: dist
-      builder: custom
-      commands:
-        - npm ci
-        - npm run build
-      supported-platforms:
-        []
-
-  - name: send_and_request-portal-deployer
-    type: com.sap.application.content
-    path: app/portal
-    parameters:
-      config:
-        TENANT_HOST_PATTERN: "^(.*)-${default-uri}"
-    requires:
-      - name: send_and_request-portal
-        parameters:
-          content-target: true
-          service-key:
-            name: send_and_request-portal-key
-            config:
-              content-endpoint: developer
-      - name: send_and_request-auth
-      - name: send_and_request-html5-repo-host
-      - name: send_and_request-app-deployer
-    deployed-after:
-      - send_and_request-app-deployer
-  - name: notification-content-deployment
-    type: nodejs
-    path: gen/srv
-    parameters:
-      no-route: true
-      no-start: true
-      memory: 256MB
-      disk-quota: 1GB
-      tasks:
-        - name: notification-content-deployment
-          command: "node node_modules/@cap-js/notifications/lib/content-deployment.js"
-          memory: 256MB
-          disk-quota: 1GB
-    requires:
-      - name: send_and_request-destination
-
-resources:
-  - name: send_and_request-auth
-    type: org.cloudfoundry.managed-service
-    parameters:
-      service: xsuaa
-      service-plan: application
-      path: ./xs-security.json
-      config:
-        xsappname: send_and_request-${org}-${space}
-        tenant-mode: shared
-        oauth2-configuration:
-          credential-types:
-            - "binding-secret"
-            - "x509"
-          redirect-uris:
-            - https://*~{app-api/app-uri}/**
-        role-collections:
-          - name: 'admin (send_and_request ${org}-${space})'
-            description: 'generated'
-            role-template-references:
-              - '$XSAPPNAME.admin'
-    requires:
-      - name: app-api
-    processed-after:
-      - send_and_request-messaging
-  - name: send_and_request-db
-    type: org.cloudfoundry.managed-service
-    parameters:
-      service: service-manager
-      service-plan: container
-  - name: send_and_request-postgres
-    type: org.cloudfoundry.managed-service
-    parameters:
-      service: postgresql-db
-      service-plan: development
-  - name: send_and_request-redis
-    type: org.cloudfoundry.managed-service
-    parameters:
-      service: redis-cache
-      service-plan: standard
-      # config:
-      # memory: 2 # GB, can be 2 or 4
-      # multi_az: true
-      # cluster_mode: true
-      # shard_count: 1
-      # node_count: 3 # per shard minimum is 3 (for standard plan)
-      # engine_version: "6.0" # can be "4.0" or "6.0"
-      # maintenance_window:
-      # day_of_week: Friday
-      # start_hour_utc: 0
-      # duration: 5 # hours
-  - name: send_and_request-registry
-    type: org.cloudfoundry.managed-service
-    requires:
-      - name: mtx-api
-    parameters:
-      service: saas-registry
-      service-plan: application
-      config:
-        xsappname: send_and_request-${org}-${space}
-        appName: send_and_request-${org}-${space}
-        displayName: send_and_request
-        description: A simple CAP project.
-        category: 'Category'
-        appUrls:
-          getDependencies: ~{mtx-api/mtx-url}/-/cds/saas-provisioning/dependencies
-          onSubscription: ~{mtx-api/mtx-url}/-/cds/saas-provisioning/tenant/{tenantId}
-          onSubscriptionAsync: true
-          onUnSubscriptionAsync: true
-          onUpdateDependenciesAsync: true
-          callbackTimeoutMillis: 300000 # Increase if your deployments are taking longer than that
-  - name: send_and_request-messaging
-    type: org.cloudfoundry.managed-service
-    parameters:
-      service: enterprise-messaging
-      service-plan: default
-      path: ./event-mesh.json
-  - name: send_and_request-kafka
-    type: org.cloudfoundry.managed-service
-    parameters:
-      service: kafka
-      service-plan: standard
-  - name: send_and_request-connectivity
-    type: org.cloudfoundry.managed-service
-    parameters:
-      service: connectivity
-      service-plan: lite
-  - name: send_and_request-destination
-    type: org.cloudfoundry.managed-service
-    parameters:
-      service: destination
-      service-plan: lite
-
-  - name: send_and_request-html5-repo-host
-    type: org.cloudfoundry.managed-service
-    parameters:
-      service: html5-apps-repo
-      service-plan: app-host
-  - name: send_and_request-html5-runtime
-    type: org.cloudfoundry.managed-service
-    parameters:
-      service: html5-apps-repo
-      service-plan: app-runtime
-  - name: send_and_request-portal
-    type: org.cloudfoundry.managed-service
-    parameters:
-      service: portal
-      service-plan: standard
-  - name: send_and_request-logging
-    type: org.cloudfoundry.managed-service
-    parameters:
-      service: application-logs
-      service-plan: standard
-  - name: send_and_request-auditlog
-    type: org.cloudfoundry.managed-service
-    parameters:
-      service: auditlog
-      service-plan: premium
+  - builder: custom
+    commands:
+    - npm ci
+    - npx cds build --production

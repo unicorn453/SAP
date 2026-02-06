@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shipment Document Transfer System</title>
+    
+    <!-- SAPUI5 Bootstrap -->
+    <script
+        id="sap-ui-bootstrap"
+        src="https://sapui5.hana.ondemand.com/1.120.0/resources/sap-ui-core.js"
+        data-sap-ui-theme="sap_horizon"
+        data-sap-ui-resourceroots='{
+            "supplier": "./supplier",
+            "company": "./company"
+        }'
+        data-sap-ui-oninit="module:sap/ui/core/ComponentSupport"
+        data-sap-ui-compatVersion="edge"
+        data-sap-ui-async="true"
+        data-sap-ui-frameOptions="trusted"
+    ></script>
+    
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f5576c 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .container {
+            max-width: 1200px;
+            background: white;
+            padding: 60px;
+            border-radius: 15px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            text-align: center;
+        }
+
+        h1 {
+            color: #2d3748;
+            margin-bottom: 20px;
+            font-size: 36px;
+        }
+
+        .subtitle {
+            color: #718096;
+            margin-bottom: 30px;
+            font-size: 18px;
+        }
+
+        .portals {
+            display: flex;
+            gap: 30px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-top: 30px;
+        }
+
+        .portal-section {
+            flex: 1;
+            min-width: 450px;
+            padding: 40px;
+            border-radius: 12px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .portal-section:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        .portal-section h2 {
+            color: white;
+            margin-bottom: 15px;
+            font-size: 28px;
+        }
+
+        .portal-section p {
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 16px;
+            margin: 0;
+        }
+
+        .footer {
+            margin-top: 50px;
+            color: #718096;
+            font-size: 14px;
+        }
+    </style>
+</head>
+
+<body class="sapUiBody sapUiSizeCompact">
+    <div class="container">
+        <h1>🚚 Shipment Document Transfer System</h1>
+        <p class="subtitle">Secure, anonymous document transfer between suppliers and companies</p>
+
+        <div class="portals">
+            <!-- Supplier Portal -->
+            <div class="portal-section" onclick="window.location.href='./supplier/index.html'">
+                <h2>📤 Supplier Portal</h2>
+                <p>Upload shipment documents and generate download tokens</p>
+            </div>
+
+            <!-- Company Portal -->
+            <div class="portal-section" onclick="window.location.href='./company/index.html'">
+                <h2>📥 Company Portal</h2>
+                <p>Download shipment documents using tokens</p>
+            </div>
+        </div>
+
+        <div class="footer">
+            <p><strong>How it works:</strong></p>
+            <p>1. Supplier uploads document → 2. Receives download token → 3. Shares token with company → 4. Company
+                downloads document</p>
+        </div>
+    </div>
+</body>
+
+</html>
