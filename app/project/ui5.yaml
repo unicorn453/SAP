@@ -2,7 +2,7 @@
 
 specVersion: "4.0"
 metadata:
-  name: project
+  name: shipment-management
 type: application
 server:
   customMiddleware:

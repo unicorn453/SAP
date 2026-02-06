@@ -136,8 +136,8 @@ modules:
       name: send_and_requestgenres
       target-path: app/
     - artifacts:
-      - project.zip
-      name: project
+      - shipment-management.zip
+      name: shipment-management
       target-path: app/
 - name: send_and_requestadminauthors
   type: html5
@@ -213,7 +213,7 @@ modules:
       disk-quota: 1GB
       memory: 256MB
       name: notification-content-deployment
-- name: project
+- name: shipment-management
   type: html5
   path: app/project
   build-parameters:

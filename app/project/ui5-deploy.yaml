@@ -2,7 +2,7 @@
 
 specVersion: "4.0"
 metadata:
-  name: project
+  name: shipment-management
 type: application
 resources:
   configuration:
@@ -16,7 +16,7 @@ builder:
     - name: ui5-task-zipper
       afterTask: generateCachebusterInfo
       configuration:
-        archiveName: project
+        archiveName: shipment-management
         relativePaths: true
         additionalFiles:
           - xs-app.json

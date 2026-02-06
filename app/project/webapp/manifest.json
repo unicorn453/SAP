@@ -1,26 +1,18 @@
 {
-  "_version": "1.81.0",
+  "_version": "1.49.0",
   "sap.app": {
-    "id": "project",
+    "id": "shipment.management",
     "type": "application",
-    "i18n": "i18n/i18n.properties",
+    "title": "Shipment Management",
+    "description": "Manage supplier shipments and inventory documents",
     "applicationVersion": {
-      "version": "0.0.1"
-    },
-    "title": "{{appTitle}}",
-    "description": "{{appDescription}}",
-    "resources": "resources.json",
-    "sourceTemplate": {
-      "id": "@sap/generator-fiori:basic",
-      "version": "1.20.2",
-      "toolsId": "939be9de-c4d9-43e2-8ec1-5c42877eff98"
+      "version": "1.0.0"
     },
     "dataSources": {
       "mainService": {
         "uri": "/odata/v4/shipment/",
         "type": "OData",
         "settings": {
-          "annotations": [],
           "odataVersion": "4.0"
         }
       }
@@ -28,14 +20,6 @@
   },
   "sap.ui": {
     "technology": "UI5",
-    "icons": {
-      "icon": "",
-      "favIcon": "",
-      "phone": "",
-      "phone@2": "",
-      "tablet": "",
-      "tablet@2": ""
-    },
     "deviceTypes": {
       "desktop": true,
       "tablet": true,
@@ -43,12 +27,10 @@
     }
   },
   "sap.ui5": {
-    "flexEnabled": true,
     "dependencies": {
-      "minUI5Version": "1.144.1",
+      "minUI5Version": "1.108.0",
       "libs": {
-        "sap.m": {},
-        "sap.ui.core": {}
+        "sap.fe.templates": {}
       }
     },
     "contentDensities": {
@@ -59,59 +41,63 @@
       "i18n": {
         "type": "sap.ui.model.resource.ResourceModel",
         "settings": {
-          "bundleName": "project.i18n.i18n"
+          "bundleName": "shipment.management.i18n.i18n"
         }
       },
       "": {
         "dataSource": "mainService",
         "preload": true,
         "settings": {
+          "synchronizationMode": "None",
           "operationMode": "Server",
           "autoExpandSelect": true,
           "earlyRequests": true
         }
       }
     },
-    "resources": {
-      "css": [
-        {
-          "uri": "css/style.css"
-        }
-      ]
-    },
     "routing": {
-      "config": {
-        "routerClass": "sap.m.routing.Router",
-        "controlAggregation": "pages",
-        "controlId": "app",
-        "transition": "slide",
-        "type": "View",
-        "viewType": "XML",
-        "path": "project.view",
-        "async": true,
-        "viewPath": "project.view"
-      },
       "routes": [
         {
-          "name": "RouteView1",
           "pattern": ":?query:",
-          "target": [
-            "TargetView1"
-          ]
+          "name": "ShipmentDocumentsList",
+          "target": "ShipmentDocumentsList"
+        },
+        {
+          "pattern": "ShipmentDocuments({key}):?query:",
+          "name": "ShipmentDocumentsObjectPage",
+          "target": "ShipmentDocumentsObjectPage"
         }
       ],
       "targets": {
-        "TargetView1": {
-          "id": "View1",
-          "name": "View1"
+        "ShipmentDocumentsList": {
+          "type": "Component",
+          "id": "ShipmentDocumentsList",
+          "name": "sap.fe.templates.ListReport",
+          "options": {
+            "settings": {
+              "entitySet": "ShipmentDocuments",
+              "variantManagement": "Page",
+              "navigation": {
+                "ShipmentDocuments": {
+                  "detail": {
+                    "route": "ShipmentDocumentsObjectPage"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "ShipmentDocumentsObjectPage": {
+          "type": "Component",
+          "id": "ShipmentDocumentsObjectPage",
+          "name": "sap.fe.templates.ObjectPage",
+          "options": {
+            "settings": {
+              "entitySet": "ShipmentDocuments"
+            }
+          }
         }
       }
-    },
-    "rootView": {
-      "viewName": "project.view.App",
-      "type": "XML",
-      "id": "App",
-      "async": true
     }
   }
 }

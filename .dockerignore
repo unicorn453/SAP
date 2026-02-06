@@ -7,4 +7,4 @@ node_modules
 uploads/*
 !uploads/.gitkeep
 .vscode
-test-email.js
+test-email.js   

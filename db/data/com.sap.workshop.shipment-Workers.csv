@@ -1,0 +1,12 @@
+workerID,email,firstName,lastName,department,position,rank,isActive,createdAt,modifiedAt
+SWIT-FIN-001,max.mueller@schwarzit.com,Max,Müller,Finance,Financial Analyst,1,true,2024-01-15T09:00:00Z,2024-01-15T09:00:00Z
+SWIT-FIN-002,anna.schmidt@schwarzit.com,Anna,Schmidt,Finance,Senior Accountant,3,true,2024-01-15T09:00:00Z,2024-01-15T09:00:00Z
+SWIT-FIN-003,michael.wagner@schwarzit.com,Michael,Wagner,Finance,CFO,5,true,2024-01-15T09:00:00Z,2024-01-15T09:00:00Z
+SWIT-IT-001,thomas.weber@schwarzit.com,Thomas,Weber,IT,Software Developer,2,true,2024-01-15T09:00:00Z,2024-01-15T09:00:00Z
+SWIT-IT-002,lisa.becker@schwarzit.com,Lisa,Becker,IT,IT Manager,4,true,2024-01-15T09:00:00Z,2024-01-15T09:00:00Z
+SWIT-IT-999,klaus.meier@schwarzit.com,Klaus,Meier,IT,Former Developer,2,false,2024-01-15T09:00:00Z,2025-12-31T17:00:00Z
+SWIT-HR-001,peter.hoffmann@schwarzit.com,Peter,Hoffmann,HR,HR Specialist,2,true,2024-01-15T09:00:00Z,2024-01-15T09:00:00Z
+SWIT-LOG-001,maria.schulz@schwarzit.com,Maria,Schulz,Logistics,Warehouse Manager,3,true,2024-01-15T09:00:00Z,2024-01-15T09:00:00Z
+SWIT-LOG-002,david.klein@schwarzit.com,David,Klein,Logistics,Junior Coordinator,1,true,2024-01-15T09:00:00Z,2024-01-15T09:00:00Z
+SWIT-MKT-001,sarah.fischer@schwarzit.com,Sarah,Fischer,Marketing,Marketing Lead,3,true,2024-01-15T09:00:00Z,2024-01-15T09:00:00Z
+SWIT-SILV-001;Silvita;Razh;silvitarazh@gmail.com;IT;Developer;1;true

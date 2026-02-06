@@ -1,0 +1,6 @@
+partnerID,companyName,contactEmail,contactPerson,partnerType,isActive,createdAt,modifiedAt
+EXT-FARM-001,FarmSupply GmbH,contact@farmsupply.com,Klaus Müller,FARMER,true,2024-01-15T09:00:00Z,2024-01-15T09:00:00Z
+EXT-MANU-001,TechManufactur AG,info@techmanu.de,Stefan Schneider,MANUFACTURER,true,2024-01-15T09:00:00Z,2024-01-15T09:00:00Z
+EXT-SUPP-001,OfficeSupplies Ltd,orders@officesupply.co.uk,Emma Thompson,SUPPLIER,true,2024-01-15T09:00:00Z,2024-01-15T09:00:00Z
+EXT-VEND-001,FoodVendor International,contact@foodvendor.com,Pierre Dubois,VENDOR,true,2024-01-15T09:00:00Z,2024-01-15T09:00:00Z
+EXT-LOGI-001,QuickLogistics Express,dispatch@quicklog.com,Hans Meyer,SUPPLIER,true,2024-01-15T09:00:00Z,2024-01-15T09:00:00Z
